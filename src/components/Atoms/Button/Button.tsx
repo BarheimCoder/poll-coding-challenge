@@ -1,36 +1,48 @@
-import React, { ButtonHTMLAttributes, useState } from 'react';
+import React, { ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   result?: string;
   showResult?: boolean;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-function Button({ children, type, result, showResult, ...props }: ButtonProps) {
-  const [isSelected, setIsSelected] = useState<boolean>(false);
-
+function Button({
+  children,
+  type,
+  result,
+  showResult,
+  isSelected,
+  onSelect,
+  ...props
+}: ButtonProps) {
   const buttonStyles: string[] = [
     'relative',
-    'border-4 border-transparent rounded-lg backdrop:blur-lg',
+    'border-4 rounded-lg backdrop:blur-lg',
     'px-12 py-4',
     'font-semibold',
     'transition duration-200',
-    'hover:cursor-pointer hover:border-white',
-    'focus:cursor-pointer focus:border-white',
-    isSelected
-      ? 'border-yellow-500 active:border-yellow-500 focus:border-yellow-500 animate-pulse'
-      : 'border-white ',
+    'hover:cursor-pointer',
+    'focus:cursor-pointer',
     showResult
       ? 'bg-no-repeat bg-left bg-gradient-to-r from-indigo-500 to-pink-500'
       : '',
     type === 'submit'
-      ? 'bg-white hover:bg-white/40 uppercase'
+      ? 'bg-white hover:bg-white/40 uppercase opacity-100'
       : 'bg-white/30 hover:bg-white focus:bg-white/40',
+    isSelected
+      ? 'border-purple-500 active:border-purple-500 hover:border-purple-500 focus:border-purple-500'
+      : 'border-white  hover:border-white focus:border-white',
+    isSelected && showResult
+      ? 'scale-105 animate-bounce'
+      : 'hover:opacity:100 hover:scale-105',
   ];
 
   const handleClick = () => {
-    setIsSelected(true);
-    console.log('beep');
+    if (onSelect) {
+      onSelect();
+    }
   };
 
   return (
@@ -38,7 +50,8 @@ function Button({ children, type, result, showResult, ...props }: ButtonProps) {
       className={buttonStyles.join(' ')}
       style={{ backgroundSize: result }}
       type={type}
-      onClick={() => handleClick()}
+      disabled={showResult}
+      onClick={handleClick}
       {...props}
     >
       {children}
