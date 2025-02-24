@@ -1,13 +1,14 @@
 import { PollOption } from '../../Molecules/PollOption/PollOption.tsx';
 import Button from '../../Atoms/Button/Button';
 import { Poll } from '../../../types/poll';
-
+import { Spinner } from '../../Atoms/Spinner';
 interface PollContainerProps {
   poll: Poll;
   selectedOption: number | null;
   showResult: boolean;
   onOptionSelect: (id: number) => void;
   onVote: () => void;
+  isVoting: boolean;
 }
 
 export function PollContainer({ 
@@ -15,7 +16,8 @@ export function PollContainer({
   selectedOption, 
   showResult, 
   onOptionSelect, 
-  onVote 
+  onVote, 
+  isVoting 
 }: PollContainerProps) {
   const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
 
@@ -36,9 +38,10 @@ export function PollContainer({
         <Button 
           type="submit" 
           onClick={onVote}
-          disabled={!selectedOption && !showResult}
+          disabled={(!selectedOption && !showResult) || isVoting}
         >
-          {!showResult ? 'Vote' : 'Vote again'}
+          {isVoting && <Spinner />}
+          {isVoting ? <span className="animate-pulse">Voting...</span> : (!showResult ? 'Vote' : 'Vote again')}
         </Button>
       </div>
     </div>
