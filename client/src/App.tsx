@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react';
-import Button from './components/Atoms/Button/Button';
+import { PollContainer } from './components/Organisms/PollContainer/PollContainer';
 import { pollService } from './services/api';
-
-interface PollOption {
-  id: number;
-  option_text: string;
-  votes: number;
-}
-
-interface Poll {
-  id: number;
-  question: string;
-  options: PollOption[];
-}
+import { Poll } from './types/poll';
 
 function App() {
   const [showResult, setShowResult] = useState<boolean>(false);
@@ -35,7 +24,6 @@ function App() {
 
   const handleVoteClick = async () => {
     if (showResult) {
-      // Reset the poll
       setShowResult(false);
       setSelectedOption(null);
       return;
@@ -46,7 +34,7 @@ function App() {
     try {
       await pollService.vote(poll.id, selectedOption);
       setShowResult(true);
-      loadActivePoll(); // Reload poll to get updated votes
+      loadActivePoll();
     } catch (err) {
       setError('Failed to submit vote');
     }
@@ -57,30 +45,13 @@ function App() {
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div className="container text-center py-8 px-4 rounded-lg bg-white/20 md:w-1/3">
-        <h1 className="text-4xl mb-12">{poll.question}</h1>
-        <div className="flex flex-col gap-4 my-4">
-          {poll.options.map((option) => (
-            <Button
-              key={option.id}
-              type="button"
-              result={showResult ? `${((option.votes / poll.options.reduce((sum, opt) => sum + opt.votes, 0)) * 100).toFixed(0)}%` : undefined}
-              showResult={showResult}
-              isSelected={selectedOption === option.id}
-              onSelect={() => setSelectedOption(option.id)}
-            >
-              {option.option_text}
-            </Button>
-          ))}
-          <Button 
-            type="submit" 
-            onClick={handleVoteClick}
-            disabled={!selectedOption && !showResult}
-          >
-            {!showResult ? 'Vote' : 'Vote again'}
-          </Button>
-        </div>
-      </div>
+      <PollContainer
+        poll={poll}
+        selectedOption={selectedOption}
+        showResult={showResult}
+        onOptionSelect={setSelectedOption}
+        onVote={handleVoteClick}
+      />
     </div>
   );
 }
