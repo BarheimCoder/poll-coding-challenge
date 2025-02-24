@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PollContainer } from './components/Organisms/PollContainer/PollContainer';
 import { pollService } from './services/api';
 import { Poll } from './types/poll';
-
+import { Spinner } from './components/Atoms/Spinner';
 function App() {
   const [showResult, setShowResult] = useState<boolean>(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -49,7 +49,12 @@ function App() {
   };
 
   if (error) return <div className="text-red-500">{error}</div>;
-  if (!poll) return <div>Loading...</div>;
+  if (!poll) return (
+    <div className="flex justify-center items-center h-screen text-black">
+      <div className="flex justify-center items-center gap-4 bg-white/30 backdrop:blur-sm p-4 rounded-lg animate-pulse">
+      <Spinner />Loading...
+    </div>
+  </div>);
 
   return (
     <div className="flex justify-center items-center h-screen">
