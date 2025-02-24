@@ -34,6 +34,13 @@ function App() {
   };
 
   const handleVoteClick = async () => {
+    if (showResult) {
+      // Reset the poll
+      setShowResult(false);
+      setSelectedOption(null);
+      return;
+    }
+
     if (!poll || !selectedOption) return;
 
     try {
@@ -68,7 +75,7 @@ function App() {
           <Button 
             type="submit" 
             onClick={handleVoteClick}
-            disabled={!selectedOption}
+            disabled={!selectedOption && !showResult}
           >
             {!showResult ? 'Vote' : 'Vote again'}
           </Button>
