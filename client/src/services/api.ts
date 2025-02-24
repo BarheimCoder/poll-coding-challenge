@@ -17,5 +17,14 @@ export const pollService = {
     });
     if (!response.ok) throw new Error('Failed to submit vote');
     return response.json();
-  }
+  },
+
+  createPoll: async ({ question, options }: { question: string; options: string[] }) => {
+    const response = await fetch(`${API_URL}/polls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, options }),
+    });
+    return response.json();
+  },
 }; 

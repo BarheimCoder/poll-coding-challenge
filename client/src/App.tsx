@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { PollContainer } from './components/Organisms/PollContainer/PollContainer';
 import { pollService } from './services/api';
 import { Poll } from './types/poll';
 import { Spinner } from './components/Atoms/Spinner';
+import { Admin } from './pages/Admin';
+
 function App() {
   const [showResult, setShowResult] = useState<boolean>(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -57,16 +60,36 @@ function App() {
   </div>);
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <PollContainer
-        poll={poll}
-        selectedOption={selectedOption}
-        showResult={showResult}
-        onOptionSelect={setSelectedOption}
-        onVote={handleVoteClick}
-        isVoting={isVoting}
-      />
-    </div>
+    <Router>
+      <div className="min-h-screen">
+        <nav className="bg-white/20 p-4 mb-8">
+          <div className="container mx-auto flex justify-center gap-4">
+            <Link to="/" className="text-black transition duration-200 hover:opacity-70">Vote</Link>
+            <Link to="/admin" className="text-black transition duration-200 hover:opacity-70">Admin</Link>
+          </div>
+        </nav>
+
+        <Routes>
+          <Route path="/admin" element={
+            <div className="flex justify-center items-center">
+              <Admin />
+            </div>
+          } />
+          <Route path="/" element={
+            <div className="flex justify-center items-center">
+              <PollContainer
+                poll={poll}
+                selectedOption={selectedOption}
+                showResult={showResult}
+                onOptionSelect={setSelectedOption}
+                onVote={handleVoteClick}
+                isVoting={isVoting}
+              />
+            </div>
+          } />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
