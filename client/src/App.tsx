@@ -1,62 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from './components/Atoms/Button/Button';
+import { pollService } from './services/api';
+
+interface PollOption {
+  id: number;
+  option_text: string;
+  votes: number;
+}
+
+interface Poll {
+  id: number;
+  question: string;
+  options: PollOption[];
+}
 
 function App() {
   const [showResult, setShowResult] = useState<boolean>(false);
-  const [selectedButton, setSelectedButton] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [poll, setPoll] = useState<Poll | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleVoteClick = () => {
-    setShowResult(true);
+  useEffect(() => {
+    loadActivePoll();
+  }, []);
+
+  const loadActivePoll = async () => {
+    try {
+      const activePoll = await pollService.getActivePoll();
+      setPoll(activePoll);
+    } catch (err) {
+      setError('Failed to load poll');
+    }
   };
 
-  const handleButtonSelect = (buttonName: string) => {
-    setSelectedButton(buttonName);
+  const handleVoteClick = async () => {
+    if (!poll || !selectedOption) return;
+
+    try {
+      await pollService.vote(poll.id, selectedOption);
+      setShowResult(true);
+      loadActivePoll(); // Reload poll to get updated votes
+    } catch (err) {
+      setError('Failed to submit vote');
+    }
   };
+
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!poll) return <div>Loading...</div>;
 
   return (
     <div className="flex justify-center items-center h-screen">
       <div className="container text-center py-8 px-4 rounded-lg bg-white/20 md:w-1/3">
-        <h1 className="text-4xl mb-12">
-          Who is going to win the F1 race? 🏎️🏁
-        </h1>
+        <h1 className="text-4xl mb-12">{poll.question}</h1>
         <div className="flex flex-col gap-4 my-4">
-          <Button
-            type="button"
-            result="48%"
-            showResult={showResult}
-            isSelected={selectedButton === 'Verstappen'}
-            onSelect={() => handleButtonSelect('Verstappen')}
+          {poll.options.map((option) => (
+            <Button
+              key={option.id}
+              type="button"
+              result={showResult ? `${((option.votes / poll.options.reduce((sum, opt) => sum + opt.votes, 0)) * 100).toFixed(0)}%` : undefined}
+              showResult={showResult}
+              isSelected={selectedOption === option.id}
+              onSelect={() => setSelectedOption(option.id)}
+            >
+              {option.option_text}
+            </Button>
+          ))}
+          <Button 
+            type="submit" 
+            onClick={handleVoteClick}
+            disabled={!selectedOption}
           >
-            Verstappen
-          </Button>
-          <Button
-            type="button"
-            result="20%"
-            showResult={showResult}
-            isSelected={selectedButton === 'Norris'}
-            onSelect={() => handleButtonSelect('Norris')}
-          >
-            Norris
-          </Button>
-          <Button
-            type="button"
-            result="68%"
-            showResult={showResult}
-            isSelected={selectedButton === 'Alonso'}
-            onSelect={() => handleButtonSelect('Alonso')}
-          >
-            Alonso
-          </Button>
-          <Button
-            type="button"
-            result="95%"
-            showResult={showResult}
-            isSelected={selectedButton === 'Hamilton'}
-            onSelect={() => handleButtonSelect('Hamilton')}
-          >
-            Hamilton
-          </Button>
-          <Button type="submit" onClick={handleVoteClick}>
             {!showResult ? 'Vote' : 'Vote again'}
           </Button>
         </div>
