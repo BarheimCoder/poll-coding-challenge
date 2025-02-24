@@ -1,50 +1,66 @@
-# React + TypeScript + Vite
+# Polling App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a simple poll application built with Node.js, Express, and PostgreSQL for the backend, and Vite, React and Tailwind for the frontend.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Polls
 
-## Expanding the ESLint configuration
+- Vote for an option
+- View the results of a poll
+- See the percentage of votes for each option
+- See the total number of votes for each option
+- See the breakdown of votes by option
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Admin
 
-- Configure the top-level `parserOptions` property like this:
+This is handled via API calls to the backend.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- Create a poll with a question and 2 to 7 options
+- Toggle the active status of a poll
+- View all polls
+- Delete a poll
+
+### App
+
+- Fully responsive
+- 100/100 score for accessibility, SEO and best practices
+- Fully acessible with keyboard, respecting tabbing order and high contrast focus
+
+## Local development setup
+
+Locally, the backend is running on port 5000 and the frontend is running on port 5173.
+
+### Backend
+
+1. Install dependencies
+
+```bash
+cd server
+npm install
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+2. Start the server
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+nodemon index.js
 ```
+
+### Frontend
+
+1. Install dependencies
+
+```bash
+cd client
+npm install
+```
+
+2. Start the frontend
+
+```bash
+npm run dev
+```
+
+## TODO
+
+- Move to Docker
