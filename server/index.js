@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const db = require('./db');
+require('dotenv').config();
+
+const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
@@ -238,6 +241,6 @@ app.delete('/api/polls/:pollId', async (req, res) => {
 /* 
  * Start the server
  */
-app.listen(5000, () => {
-  console.log('Server is running on port 5000');
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
