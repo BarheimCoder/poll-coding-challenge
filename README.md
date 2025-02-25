@@ -1,25 +1,36 @@
 # Polling App
 
-This project is a simple poll application built with Node.js, Express, and PostgreSQL for the backend, and Vite, React and Tailwind for the frontend.
+This project is a simple poll application built the following tech stack, and Docker for deployment.
+
+Backend
+- Node.js
+- Express
+- Postgres
+- JS
+
+Frontend
+- React
+- Vite
+- Typescript
+- Tailwind
+- Jest
+
+![image](https://github.com/user-attachments/assets/6455ca98-02de-4577-badd-7d66ec545d46)
 
 ## Features
 
 ### Polls
 
-- Vote for an option
-- View the results of a poll
-- See the percentage of votes for each option
-- See the total number of votes for each option
-- See the breakdown of votes by option
+- Allows users to vote for an option getting the results right
 
 ### Admin
 
 This is handled via API calls to the backend.
 
 - Create a poll with a question and 2 to 7 options
-- Toggle the active status of a poll
-- View all polls
-- Delete a poll
+- View the results of active poll with timestamps
+- See the percentage of votes for each option after voting
+- Toggle a different poll as active (toggling all others inactive)
 
 ### App
 
@@ -84,3 +95,12 @@ npm run dev
    ```bash
    docker-compose down
    ```
+
+## Potential improvements
+
+- Add authentication using something like JWT
+- Add further checks to votes like IP / session checks to avoid duplicates
+- Add more API calls
+- - View all polls in a list
+  - View vote results in the admin
+- 
