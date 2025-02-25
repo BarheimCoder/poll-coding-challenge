@@ -36,8 +36,14 @@ export const pollService = {
       },
       body: JSON.stringify({ pollId }),
     });
-    if (!response.ok) throw new Error('Failed to toggle poll status');
-    return response.json();
+    if (response.status === 404) {
+      throw new Error('Poll not found');
+    }
+    if (!response.ok) {
+      throw new Error('Failed to toggle poll status');
+    }
+    const data = await response.json();
+    return data.message;
   },
 
   deletePoll: async (pollId: number) => {

@@ -60,15 +60,21 @@ app.get('/api/polls/active', async (req, res) => {
 app.post('/api/polls/toggle-active', async (req, res) => {
   try {
     const { pollId } = req.body;
-    const client = await db.pool.connect();
 
+    // Check if poll exists
+    const pollCheck = await db.pool.query('SELECT id FROM polls WHERE id = $1', [pollId]);
+    if (pollCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
+    const client = await db.pool.connect();
     try {
       await client.query('BEGIN');
       await client.query('UPDATE polls SET active = false');
       await client.query('UPDATE polls SET active = true WHERE id = $1', [pollId]);
       await client.query('COMMIT');
 
-      res.json({ message: 'Poll status updated successfully' });
+      res.json({ message: 'Poll activated successfully' });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;

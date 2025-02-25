@@ -42,6 +42,7 @@ export function Admin({
   const [errorState, setError] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [deleteMessage, setDeleteMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const [toggleMessage, setToggleMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,9 +78,16 @@ export function Admin({
     e.preventDefault();
     if (!togglePollId) return;
 
-    const success = await onToggleActive(Number(togglePollId));
-    if (success) {
+    try {
+      const message = await onToggleActive(Number(togglePollId));
+      setToggleMessage({ text: message, type: 'success' });
       setTogglePollId('');
+    } catch (err) {
+      if (err instanceof Error) {
+        setToggleMessage({ text: err.message, type: 'error' });
+      } else {
+        setToggleMessage({ text: 'Failed to toggle poll status', type: 'error' });
+      }
     }
   };
 
@@ -197,6 +205,11 @@ export function Admin({
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTogglePollId(e.target.value)}
           required
         />
+        {toggleMessage && (
+          <p className={`text-sm ${toggleMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+            {toggleMessage.text}
+          </p>
+        )}
         <Button type="submit" disabled={isToggling}>
           {isToggling ? 'Toggling...' : 'Toggle Active Poll'}
         </Button>

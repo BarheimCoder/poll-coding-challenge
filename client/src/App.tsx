@@ -72,12 +72,14 @@ function App() {
   const handleToggleActive = async (pollId: number) => {
     setIsToggling(true);
     try {
-      await pollService.toggleActive(pollId);
+      const message = await pollService.toggleActive(pollId);
       await loadActivePoll();
-      return true;
+      return message;
     } catch (err) {
-      setError('Failed to toggle poll status');
-      return false;
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Failed to toggle poll status');
     } finally {
       setIsToggling(false);
     }
