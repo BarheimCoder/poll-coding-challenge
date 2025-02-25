@@ -107,7 +107,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen">
-        <nav className="bg-white/20 p-4 mb-8">
+        <nav className="bg-white/20 p-4 mb-8 shadow-lg">
           <div className="container mx-auto flex justify-center gap-4">
             <Link to="/" className="text-black transition duration-200 hover:opacity-70">Vote</Link>
             <Link to="/admin" className="text-black transition duration-200 hover:opacity-70">Admin</Link>
