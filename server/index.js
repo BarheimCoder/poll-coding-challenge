@@ -140,6 +140,13 @@ app.post('/api/polls/:pollId/vote', async (req, res) => {
 app.get('/api/polls/:pollId/votes', async (req, res) => {
   try {
     const { pollId } = req.params;
+
+    // First check if poll exists
+    const pollCheck = await db.pool.query('SELECT id FROM polls WHERE id = $1', [pollId]);
+    if (pollCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
     const query = `
       SELECT 
         po.option_text,

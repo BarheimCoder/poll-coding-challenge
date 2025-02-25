@@ -40,6 +40,7 @@ export function Admin({
   const [votes, setVotes] = useState<Vote[]>([]);
   const [showVotes, setShowVotes] = useState(false);
   const [errorState, setError] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,14 +96,19 @@ export function Admin({
     e.preventDefault();
     if (!viewVotesId) return;
 
+    setModalError(null);
     try {
       const voteDetails = await onViewVotes(Number(viewVotesId));
       setVotes(voteDetails);
       setShowVotes(true);
-      setError(null);
     } catch (err) {
-      setError('Failed to load vote details');
-      setShowVotes(false);
+      if (err instanceof Error) {
+        setModalError(err.message);
+      } else {
+        setModalError('Failed to load vote details');
+      }
+      setShowVotes(true); // Still show modal but with error
+      setVotes([]);
     }
   };
   
@@ -191,23 +197,34 @@ export function Admin({
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl">Vote Details</h2>
               <button 
-                onClick={() => setShowVotes(false)} 
+                onClick={() => {
+                  setShowVotes(false);
+                  setModalError(null);
+                }} 
                 className="text-gray-500 hover:text-gray-700"
               >
                 ✕
               </button>
             </div>
             
-            <div className="space-y-2">
-              {votes.map((vote, index) => (
-                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span>{vote.option_text}</span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(vote.voted_at).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {modalError ? (
+              <div className="text-red-500 text-center py-4">{modalError}</div>
+            ) : (
+              <div className="space-y-2">
+                {votes.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">No votes recorded yet</div>
+                ) : (
+                  votes.map((vote, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span>{vote.option_text}</span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(vote.voted_at).toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -103,8 +103,11 @@ function App() {
       const votes = await pollService.getVoteDetails(pollId);
       return votes;
     } catch (err) {
+      if (err instanceof Error) {
+        throw err; // Pass the error through to Admin component
+      }
       setError('Failed to load vote details');
-      throw err;
+      throw new Error('Failed to load vote details');
     } finally {
       setIsLoadingVotes(false);
     }

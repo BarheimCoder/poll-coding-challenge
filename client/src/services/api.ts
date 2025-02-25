@@ -59,7 +59,12 @@ export const pollService = {
 
   getVoteDetails: async (pollId: number) => {
     const response = await fetch(`${API_URL}/polls/${pollId}/votes`);
-    if (!response.ok) throw new Error('Failed to fetch vote details');
+    if (response.status === 404) {
+      throw new Error('Poll not found');
+    }
+    if (!response.ok) {
+      throw new Error('Failed to fetch vote details');
+    }
     return response.json();
   },
 }; 
