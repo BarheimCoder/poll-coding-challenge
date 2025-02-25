@@ -1,37 +1,44 @@
 import Button from '../components/Atoms/Button/Button';
 import { Input } from '../components/Atoms/Input/Input';
 import { useState } from 'react';
-import { pollService } from '../services/api';
 import AdminContainer from '../components/Organisms/PollContainer/AdminContainer';
 
-export function Admin() {
+interface AdminProps {
+  onCreatePoll: (question: string, options: string[]) => Promise<boolean>;
+  onToggleActive: (pollId: number) => Promise<boolean>;
+  onDeletePoll: (pollId: number) => Promise<boolean>;
+  isCreating: boolean;
+  isToggling: boolean;
+  isDeleting: boolean;
+  error: string | null;
+}
+
+export function Admin({ 
+  onCreatePoll, 
+  onToggleActive, 
+  onDeletePoll,
+  isCreating,
+  isToggling,
+  isDeleting,
+  error 
+}: AdminProps) {
   const [question, setQuestion] = useState('');
   const [optionsString, setOptionsString] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [togglePollId, setTogglePollId] = useState('');
-  const [isToggling, setIsToggling] = useState(false);
+  const [deletePollId, setDeletePollId] = useState('');
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
     const options = optionsString.split(',').map(opt => opt.trim()).filter(opt => opt);
     
     if (options.length < 2) {
-      setError('Please provide at least 2 options (comma-separated)');
-      return;
+      return; // Let App component handle the error
     }
 
-    setIsCreating(true);
-    try {
-      await pollService.createPoll({ question, options });
+    const success = await onCreatePoll(question, options);
+    if (success) {
       setQuestion('');
       setOptionsString('');
-    } catch (err) {
-      setError('Failed to create poll');
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -39,26 +46,45 @@ export function Admin() {
     e.preventDefault();
     if (!togglePollId) return;
 
-    setIsToggling(true);
-    try {
-      await pollService.toggleActive(Number(togglePollId));
+    const success = await onToggleActive(Number(togglePollId));
+    if (success) {
       setTogglePollId('');
-      setError(null);
-    } catch (err) {
-      setError('Failed to toggle poll status');
-    } finally {
-      setIsToggling(false);
     }
   };
-      
 
+  const handleDeletePoll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deletePollId) return;
+
+    const success = await onDeletePoll(Number(deletePollId));
+    if (success) {
+      setDeletePollId('');
+    }
+  };
+
+  const handleViewPollResults = async (e: React.FormEvent) => {
+    e.preventDefault();
+  };
+  
   return (
     <div className="container text-center flex gap-4 justify-between flex-wrap y-8 p-4 rounded-lg bg-white/20">
       <h1 className="text-4xl mb-12 w-full">Admin Panel</h1>
 
+      {error && <p className="text-red-400 text-sm w-full">{error}</p>}
+
       <AdminContainer title="Delete Poll" onSubmit={handleDeletePoll}>
-        <Input label="Poll ID to delete" type="number" id="pollId" placeholder="Poll ID" />
-        <Button type="submit">Delete Poll</Button>
+        <Input 
+          label="Poll ID to delete" 
+          type="number" 
+          id="pollId" 
+          placeholder="Poll ID"
+          value={deletePollId}
+          onChange={(e) => setDeletePollId(e.target.value)}
+          required
+        />
+        <Button type="submit" disabled={isDeleting}>
+          {isDeleting ? 'Deleting...' : 'Delete Poll'}
+        </Button>
       </AdminContainer>
 
       <AdminContainer title="Create Poll" onSubmit={handleCreatePoll}>
@@ -80,7 +106,6 @@ export function Admin() {
             onChange={(e) => setOptionsString(e.target.value)}
             required
           />
-          {error && <p className="text-red-400 text-sm">{error}</p>}
           <Button type="submit" disabled={isCreating}>
             {isCreating ? 'Creating...' : 'Create Poll'}
           </Button>
@@ -88,7 +113,6 @@ export function Admin() {
 
       <AdminContainer title="View Poll Results" onSubmit={handleViewPollResults}>
         <Input label="Poll ID to view results of" type="number" id="pollId" placeholder="Poll ID" />
-          <Input label="Poll ID to view results of" type="number" id="pollId" placeholder="Poll ID" />
         <Button>View Poll Results</Button>
       </AdminContainer>
 

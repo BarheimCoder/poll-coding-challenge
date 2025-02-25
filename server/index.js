@@ -60,9 +60,21 @@ app.get('/api/polls/active', async (req, res) => {
 app.post('/api/polls/toggle-active', async (req, res) => {
   try {
     const { pollId } = req.body;
+    const client = await db.pool.connect();
 
-    await db.pool.query('UPDATE polls SET active = NOT active WHERE id = $1', [pollId]);
-    res.json({ message: 'Poll status toggled successfully' });
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE polls SET active = false');
+      await client.query('UPDATE polls SET active = true WHERE id = $1', [pollId]);
+      await client.query('COMMIT');
+
+      res.json({ message: 'Poll status updated successfully' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     console.error('Error toggling active poll:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -74,19 +86,16 @@ app.post('/api/polls', async (req, res) => {
   try {
     const { question, options } = req.body;
 
-    // Start a transaction
     const client = await db.pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Insert the poll
       const pollResult = await client.query(
         'INSERT INTO polls (question) VALUES ($1) RETURNING id',
         [question]
       );
       const pollId = pollResult.rows[0].id;
 
-      // Insert all options
       const optionValues = options.map((option_text) =>
         `(${pollId}, '${option_text}')`
       ).join(', ');
@@ -140,6 +149,18 @@ app.get('/api/polls/:pollId/votes', async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching votes:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete a poll
+app.delete('/api/polls/:pollId', async (req, res) => {
+  try {
+    const { pollId } = req.params;
+    await db.pool.query('DELETE FROM polls WHERE id = $1', [pollId]);
+    res.json({ message: 'Poll deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting poll:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

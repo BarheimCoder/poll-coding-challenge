@@ -43,6 +43,9 @@ export const pollService = {
   deletePoll: async (pollId: number) => {
     const response = await fetch(`${API_URL}/polls/${pollId}`, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     if (!response.ok) throw new Error('Failed to delete poll');
     return response.json();

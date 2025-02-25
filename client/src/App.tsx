@@ -13,6 +13,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isVoting, setIsVoting] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadActivePoll();
@@ -51,6 +54,48 @@ function App() {
     }
   };
 
+  const handleCreatePoll = async (question: string, options: string[]) => {
+    setIsCreating(true);
+    try {
+      await pollService.createPoll({ question, options });
+      await loadActivePoll();
+      return true; // Return success status to Admin component
+    } catch (err) {
+      setError('Failed to create poll');
+      return false;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleToggleActive = async (pollId: number) => {
+    setIsToggling(true);
+    try {
+      await pollService.toggleActive(pollId);
+      await loadActivePoll();
+      return true;
+    } catch (err) {
+      setError('Failed to toggle poll status');
+      return false;
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  const handleDeletePoll = async (pollId: number) => {
+    setIsDeleting(true);
+    try {
+      await pollService.deletePoll(pollId);
+      await loadActivePoll();
+      return true;
+    } catch (err) {
+      setError('Failed to delete poll');
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (error) return <div className="text-red-500">{error}</div>;
   if (!poll) return (
     <div className="flex justify-center items-center h-screen text-black">
@@ -72,7 +117,15 @@ function App() {
         <Routes>
           <Route path="/admin" element={
             <div className="flex justify-center items-center">
-              <Admin />
+              <Admin 
+                onCreatePoll={handleCreatePoll}
+                onToggleActive={handleToggleActive}
+                onDeletePoll={handleDeletePoll}
+                isCreating={isCreating}
+                isToggling={isToggling}
+                isDeleting={isDeleting}
+                error={error}
+              />
             </div>
           } />
           <Route path="/" element={
