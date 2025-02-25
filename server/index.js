@@ -140,12 +140,18 @@ app.post('/api/polls/:pollId/vote', async (req, res) => {
 app.get('/api/polls/:pollId/votes', async (req, res) => {
   try {
     const { pollId } = req.params;
+    const query = `
+      SELECT 
+        po.option_text,
+        v.voted_at,
+        COUNT(*) OVER() as total_votes
+      FROM votes v
+      JOIN poll_options po ON po.id = v.option_id
+      WHERE po.poll_id = $1
+      ORDER BY v.voted_at DESC
+    `;
 
-    const result = await db.pool.query(
-      'SELECT po.option_text, COUNT(v.id) as vote_count FROM poll_options po LEFT JOIN votes v ON po.id = v.option_id WHERE po.poll_id = $1 GROUP BY po.id',
-      [pollId]
-    );
-
+    const result = await db.pool.query(query, [pollId]);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching votes:', err);

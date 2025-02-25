@@ -16,6 +16,7 @@ function App() {
   const [isCreating, setIsCreating] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoadingVotes, setIsLoadingVotes] = useState(false);
 
   useEffect(() => {
     loadActivePoll();
@@ -96,6 +97,19 @@ function App() {
     }
   };
 
+  const handleViewVotes = async (pollId: number) => {
+    setIsLoadingVotes(true);
+    try {
+      const votes = await pollService.getVoteDetails(pollId);
+      return votes;
+    } catch (err) {
+      setError('Failed to load vote details');
+      throw err;
+    } finally {
+      setIsLoadingVotes(false);
+    }
+  };
+
   if (error) return <div className="text-red-500">{error}</div>;
   if (!poll) return (
     <div className="flex justify-center items-center h-screen text-black">
@@ -124,6 +138,8 @@ function App() {
                 isCreating={isCreating}
                 isToggling={isToggling}
                 isDeleting={isDeleting}
+                isLoadingVotes={isLoadingVotes}
+                onViewVotes={handleViewVotes}
                 error={error}
               />
             </div>

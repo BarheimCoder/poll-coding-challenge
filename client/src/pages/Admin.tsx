@@ -3,13 +3,21 @@ import { Input } from '../components/Atoms/Input/Input';
 import { useState } from 'react';
 import AdminContainer from '../components/Organisms/PollContainer/AdminContainer';
 
+interface Vote {
+  option_text: string;
+  voted_at: string;
+  total_votes: number;
+}
+
 interface AdminProps {
   onCreatePoll: (question: string, options: string[]) => Promise<boolean>;
   onToggleActive: (pollId: number) => Promise<boolean>;
   onDeletePoll: (pollId: number) => Promise<boolean>;
+  onViewVotes: (pollId: number) => Promise<Vote[]>;
   isCreating: boolean;
   isToggling: boolean;
   isDeleting: boolean;
+  isLoadingVotes: boolean;
   error: string | null;
 }
 
@@ -17,15 +25,20 @@ export function Admin({
   onCreatePoll, 
   onToggleActive, 
   onDeletePoll,
+  onViewVotes,
   isCreating,
   isToggling,
   isDeleting,
+  isLoadingVotes,
   error 
 }: AdminProps) {
   const [question, setQuestion] = useState('');
   const [optionsString, setOptionsString] = useState('');
   const [togglePollId, setTogglePollId] = useState('');
   const [deletePollId, setDeletePollId] = useState('');
+  const [viewVotesId, setViewVotesId] = useState('');
+  const [votes, setVotes] = useState<Vote[]>([]);
+  const [showVotes, setShowVotes] = useState(false);
   const [errorState, setError] = useState<string | null>(null);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
@@ -78,8 +91,19 @@ export function Admin({
     }
   };
 
-  const handleViewPollResults = async (e: React.FormEvent) => {
+  const handleViewVotes = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!viewVotesId) return;
+
+    try {
+      const voteDetails = await onViewVotes(Number(viewVotesId));
+      setVotes(voteDetails);
+      setShowVotes(true);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load vote details');
+      setShowVotes(false);
+    }
   };
   
   return (
@@ -131,9 +155,19 @@ export function Admin({
         </Button>
       </AdminContainer>
 
-      <AdminContainer title="View Poll Results" onSubmit={handleViewPollResults}>
-        <Input label="Poll ID to view results of" type="number" id="pollId" placeholder="Poll ID" />
-        <Button>View Poll Results</Button>
+      <AdminContainer title="View Vote Details" onSubmit={handleViewVotes}>
+        <Input 
+          label="Poll ID to view vote details" 
+          type="number" 
+          id="viewVotesId" 
+          placeholder="Poll ID"
+          value={viewVotesId}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setViewVotesId(e.target.value)}
+          required
+        />
+        <Button type="submit" disabled={isLoadingVotes}>
+          {isLoadingVotes ? 'Loading...' : 'View Votes'}
+        </Button>
       </AdminContainer>
 
       <AdminContainer title="Toggle active poll" onSubmit={handleToggleActive}>
@@ -150,6 +184,33 @@ export function Admin({
           {isToggling ? 'Toggling...' : 'Toggle Active Poll'}
         </Button>
       </AdminContainer>
+
+      {showVotes && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl">Vote Details</h2>
+              <button 
+                onClick={() => setShowVotes(false)} 
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              {votes.map((vote, index) => (
+                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span>{vote.option_text}</span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(vote.voted_at).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
