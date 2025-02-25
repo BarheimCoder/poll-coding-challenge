@@ -29,7 +29,7 @@ function Button({
       ? 'bg-no-repeat bg-left bg-gradient-to-r from-indigo-500 to-pink-500'
       : '',
     type === 'submit'
-      ? 'bg-white hover:bg-white/40 uppercase opacity-100'
+      ? 'bg-white hover:bg-white/40 uppercase opacity-100 flex justify-center items-center gap-4'
       : 'bg-white/30 hover:bg-white focus:bg-white/40',
     isSelected
       ? 'border-purple-500 active:border-purple-500 hover:border-purple-500 focus:border-purple-500'

@@ -61,7 +61,26 @@ app.post('/api/polls/toggle-active', async (req, res) => {
   try {
     const { pollId } = req.body;
 
-    await db.pool.query('UPDATE polls SET active = NOT active WHERE id = $1', [pollId]);
+    // Check if poll exists
+    const pollCheck = await db.pool.query('SELECT id FROM polls WHERE id = $1', [pollId]);
+    if (pollCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE polls SET active = false');
+      await client.query('UPDATE polls SET active = true WHERE id = $1', [pollId]);
+      await client.query('COMMIT');
+
+      res.json({ message: 'Poll activated successfully' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     console.error('Error toggling active poll:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -73,25 +92,39 @@ app.post('/api/polls', async (req, res) => {
   try {
     const { question, options } = req.body;
 
-    // Start a transaction
+    // Validate input
+    if (!question.trim()) {
+      return res.status(400).json({ error: 'Question cannot be empty' });
+    }
+    if (options.length < 2) {
+      return res.status(400).json({ error: 'Poll must have at least 2 options' });
+    }
+
+    // Check for duplicate options
+    const uniqueOptions = new Set(options.map(opt => opt.trim()));
+    if (uniqueOptions.size !== options.length) {
+      return res.status(400).json({ error: 'Duplicate options are not allowed' });
+    }
+
     const client = await db.pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Insert the poll
       const pollResult = await client.query(
         'INSERT INTO polls (question) VALUES ($1) RETURNING id',
         [question]
       );
       const pollId = pollResult.rows[0].id;
 
-      // Insert all options
-      const optionValues = options.map((option_text) =>
-        `(${pollId}, '${option_text}')`
+      const optionQueries = options.map((_, index) =>
+        `($1, $${index + 2})`
       ).join(', ');
 
+      const optionParams = [pollId, ...options];
+
       await client.query(
-        `INSERT INTO poll_options (poll_id, option_text) VALUES ${optionValues}`
+        `INSERT INTO poll_options (poll_id, option_text) VALUES ${optionQueries}`,
+        optionParams
       );
 
       await client.query('COMMIT');
@@ -114,6 +147,16 @@ app.post('/api/polls/:pollId/vote', async (req, res) => {
     const { pollId } = req.params;
     const { optionId } = req.body;
 
+    // Verify option belongs to poll
+    const optionCheck = await db.pool.query(
+      'SELECT id FROM poll_options WHERE id = $1 AND poll_id = $2',
+      [optionId, pollId]
+    );
+
+    if (optionCheck.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid option for this poll' });
+    }
+
     await db.pool.query(
       'INSERT INTO votes (poll_id, option_id) VALUES ($1, $2)',
       [pollId, optionId]
@@ -131,14 +174,46 @@ app.get('/api/polls/:pollId/votes', async (req, res) => {
   try {
     const { pollId } = req.params;
 
-    const result = await db.pool.query(
-      'SELECT po.option_text, COUNT(v.id) as vote_count FROM poll_options po LEFT JOIN votes v ON po.id = v.option_id WHERE po.poll_id = $1 GROUP BY po.id',
-      [pollId]
-    );
+    // First check if poll exists
+    const pollCheck = await db.pool.query('SELECT id FROM polls WHERE id = $1', [pollId]);
+    if (pollCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
 
+    const query = `
+      SELECT 
+        po.option_text,
+        v.voted_at,
+        COUNT(*) OVER() as total_votes
+      FROM votes v
+      JOIN poll_options po ON po.id = v.option_id
+      WHERE po.poll_id = $1
+      ORDER BY v.voted_at DESC
+    `;
+
+    const result = await db.pool.query(query, [pollId]);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching votes:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete a poll
+app.delete('/api/polls/:pollId', async (req, res) => {
+  try {
+    const { pollId } = req.params;
+
+    // Check if poll exists
+    const pollCheck = await db.pool.query('SELECT id FROM polls WHERE id = $1', [pollId]);
+    if (pollCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
+    await db.pool.query('DELETE FROM polls WHERE id = $1', [pollId]);
+    res.json({ message: 'Poll deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting poll:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
