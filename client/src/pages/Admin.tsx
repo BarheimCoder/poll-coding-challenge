@@ -41,6 +41,7 @@ export function Admin({
   const [showVotes, setShowVotes] = useState(false);
   const [errorState, setError] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [deleteMessage, setDeleteMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,9 +87,16 @@ export function Admin({
     e.preventDefault();
     if (!deletePollId) return;
 
-    const success = await onDeletePoll(Number(deletePollId));
-    if (success) {
+    try {
+      const message = await onDeletePoll(Number(deletePollId));
+      setDeleteMessage({ text: message, type: 'success' });
       setDeletePollId('');
+    } catch (err) {
+      if (err instanceof Error) {
+        setDeleteMessage({ text: err.message, type: 'error' });
+      } else {
+        setDeleteMessage({ text: 'Failed to delete poll', type: 'error' });
+      }
     }
   };
 
@@ -116,8 +124,6 @@ export function Admin({
     <div className="container text-center flex gap-4 justify-between flex-wrap y-8 p-4 rounded-lg bg-white/20">
       <h1 className="text-4xl mb-12 w-full">Admin Panel</h1>
 
-      {errorState && <p className="text-red-400 text-sm w-full">{errorState}</p>}
-
       <AdminContainer title="Delete Poll" onSubmit={handleDeletePoll}>
         <Input 
           label="Poll ID to delete" 
@@ -128,6 +134,11 @@ export function Admin({
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeletePollId(e.target.value)}
           required
         />
+        {deleteMessage && (
+          <p className={`text-sm ${deleteMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+            {deleteMessage.text}
+          </p>
+        )}
         <Button type="submit" disabled={isDeleting}>
           {isDeleting ? 'Deleting...' : 'Delete Poll'}
         </Button>
@@ -201,9 +212,10 @@ export function Admin({
                   setShowVotes(false);
                   setModalError(null);
                 }} 
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 hover:cursor-pointer"
               >
                 ✕
+                <span className="sr-only">Close modal</span>
               </button>
             </div>
             

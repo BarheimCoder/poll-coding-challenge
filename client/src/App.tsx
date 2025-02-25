@@ -86,12 +86,14 @@ function App() {
   const handleDeletePoll = async (pollId: number) => {
     setIsDeleting(true);
     try {
-      await pollService.deletePoll(pollId);
+      const message = await pollService.deletePoll(pollId);
       await loadActivePoll();
-      return true;
+      return message;
     } catch (err) {
-      setError('Failed to delete poll');
-      return false;
+      if (err instanceof Error) {
+        throw err; // Pass the error through to Admin component
+      }
+      throw new Error('Failed to delete poll');
     } finally {
       setIsDeleting(false);
     }
@@ -113,7 +115,7 @@ function App() {
     }
   };
 
-  if (error) return <div className="text-red-500">{error}</div>;
+  // if (error) return <div className="text-red-500">{error}</div>;
   if (!poll) return (
     <div className="flex justify-center items-center h-screen text-black">
       <div className="flex justify-center items-center gap-4 bg-white/30 backdrop:blur-sm p-4 rounded-lg animate-pulse">

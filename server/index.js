@@ -170,6 +170,13 @@ app.get('/api/polls/:pollId/votes', async (req, res) => {
 app.delete('/api/polls/:pollId', async (req, res) => {
   try {
     const { pollId } = req.params;
+
+    // Check if poll exists
+    const pollCheck = await db.pool.query('SELECT id FROM polls WHERE id = $1', [pollId]);
+    if (pollCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
     await db.pool.query('DELETE FROM polls WHERE id = $1', [pollId]);
     res.json({ message: 'Poll deleted successfully' });
   } catch (err) {

@@ -47,8 +47,14 @@ export const pollService = {
         'Content-Type': 'application/json',
       },
     });
-    if (!response.ok) throw new Error('Failed to delete poll');
-    return response.json();
+    if (response.status === 404) {
+      throw new Error('Poll not found');
+    }
+    if (!response.ok) {
+      throw new Error('Failed to delete poll');
+    }
+    const data = await response.json();
+    return data.message;
   },
 
   getPollResults: async (pollId: number) => {
