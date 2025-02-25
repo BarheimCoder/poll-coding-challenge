@@ -1,14 +1,28 @@
-import { InputHTMLAttributes } from 'react';
+import { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+type BaseInputProps = {
   label: string;
-}
+  type?: string;
+  rows?: number;
+  id: string;
+};
 
-export const Input = ({ label, ...props }: InputProps) => {
+type InputElementProps = InputHTMLAttributes<HTMLInputElement>;
+type TextareaElementProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
+
+type InputProps = BaseInputProps & (InputElementProps | TextareaElementProps);
+
+const inputStyles = 'bg-white/80 rounded-md p-2';
+
+export const Input = ({ label, type, ...props }: InputProps) => {
   return (
     <div className='flex flex-col gap-2'>
       <label htmlFor={props.id} className='text-left text-lg'>{label}</label>
-      <input {...props} className='border-2 border-gray-300 rounded-md p-2' />
+      {type === 'textarea' ? (
+        <textarea {...props as TextareaElementProps} className={inputStyles} />
+      ) : (
+        <input {...props as InputElementProps} type={type} className={inputStyles} />
+      )}
     </div>
   );
 };

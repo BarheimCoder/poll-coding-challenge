@@ -26,19 +26,35 @@ export function Admin({
   const [optionsString, setOptionsString] = useState('');
   const [togglePollId, setTogglePollId] = useState('');
   const [deletePollId, setDeletePollId] = useState('');
+  const [errorState, setError] = useState<string | null>(null);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
-    const options = optionsString.split(',').map(opt => opt.trim()).filter(opt => opt);
+    const options = optionsString
+      .split('\n')
+      .map(opt => opt.trim())
+      .filter(opt => opt);
     
     if (options.length < 2) {
-      return; // Let App component handle the error
+      setError('Please provide at least 2 options');
+      return;
+    }
+
+    if (options.length > 7) {
+      setError('Maximum 7 options allowed');
+      return;
+    }
+
+    if (new Set(options).size !== options.length) {
+      setError('Duplicate options are not allowed');
+      return;
     }
 
     const success = await onCreatePoll(question, options);
     if (success) {
       setQuestion('');
       setOptionsString('');
+      setError(null);
     }
   };
 
@@ -70,7 +86,7 @@ export function Admin({
     <div className="container text-center flex gap-4 justify-between flex-wrap y-8 p-4 rounded-lg bg-white/20">
       <h1 className="text-4xl mb-12 w-full">Admin Panel</h1>
 
-      {error && <p className="text-red-400 text-sm w-full">{error}</p>}
+      {errorState && <p className="text-red-400 text-sm w-full">{errorState}</p>}
 
       <AdminContainer title="Delete Poll" onSubmit={handleDeletePoll}>
         <Input 
@@ -79,7 +95,7 @@ export function Admin({
           id="pollId" 
           placeholder="Poll ID"
           value={deletePollId}
-          onChange={(e) => setDeletePollId(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeletePollId(e.target.value)}
           required
         />
         <Button type="submit" disabled={isDeleting}>
@@ -89,26 +105,30 @@ export function Admin({
 
       <AdminContainer title="Create Poll" onSubmit={handleCreatePoll}>
         <Input 
-            label="Poll question" 
-            type="text" 
-            id="pollQuestion" 
-            placeholder="Poll question"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            required
-          />
-          <Input 
-            label="Poll options (comma-separated)" 
-            type="text" 
-            id="pollOptions" 
-            placeholder="Option 1, Option 2, Option 3"
-            value={optionsString}
-            onChange={(e) => setOptionsString(e.target.value)}
-            required
-          />
-          <Button type="submit" disabled={isCreating}>
-            {isCreating ? 'Creating...' : 'Create Poll'}
-          </Button>
+          label="Poll question" 
+          type="text" 
+          id="pollQuestion" 
+          placeholder="What is your favorite color?"
+          value={question}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
+          required
+          minLength={5}
+          maxLength={200}
+        />
+        <Input 
+          label="Poll options (one per line)" 
+          type="textarea" 
+          id="pollOptions" 
+          placeholder="Red&#13;&#10;Blue&#13;&#10;Green"
+          value={optionsString}
+          rows={5}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setOptionsString(e.target.value)}
+          required
+        />
+        {errorState && <p className="text-red-500 text-sm">{errorState}</p>}
+        <Button type="submit" disabled={isCreating}>
+          {isCreating ? 'Creating...' : 'Create Poll'}
+        </Button>
       </AdminContainer>
 
       <AdminContainer title="View Poll Results" onSubmit={handleViewPollResults}>
@@ -123,7 +143,7 @@ export function Admin({
           id="pollId" 
           placeholder="Poll ID"
           value={togglePollId}
-          onChange={(e) => setTogglePollId(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTogglePollId(e.target.value)}
           required
         />
         <Button type="submit" disabled={isToggling}>
