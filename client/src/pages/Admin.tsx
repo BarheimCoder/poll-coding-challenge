@@ -1,5 +1,6 @@
 import Button from '../components/Atoms/Button/Button';
 import { Input } from '../components/Atoms/Input/Input';
+import { TextArea } from '../components/Atoms/TextArea/TextArea';
 import { useState } from 'react';
 import AdminContainer from '../components/Organisms/PollContainer/AdminContainer';
 
@@ -43,6 +44,7 @@ export function Admin({
   const [modalError, setModalError] = useState<string | null>(null);
   const [deleteMessage, setDeleteMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const [toggleMessage, setToggleMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const [createMessage, setCreateMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,27 +52,23 @@ export function Admin({
       .split('\n')
       .map(opt => opt.trim())
       .filter(opt => opt);
-    
+
     if (options.length < 2) {
-      setError('Please provide at least 2 options');
+      setCreateMessage({ text: 'Please provide at least 2 options', type: 'error' });
       return;
     }
 
-    if (options.length > 7) {
-      setError('Maximum 7 options allowed');
-      return;
-    }
-
-    if (new Set(options).size !== options.length) {
-      setError('Duplicate options are not allowed');
-      return;
-    }
-
-    const success = await onCreatePoll(question, options);
-    if (success) {
+    try {
+      const message = await onCreatePoll(question, options);
+      setCreateMessage({ text: message, type: 'success' });
       setQuestion('');
       setOptionsString('');
-      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setCreateMessage({ text: err.message, type: 'error' });
+      } else {
+        setCreateMessage({ text: 'Failed to create poll', type: 'error' });
+      }
     }
   };
 
@@ -153,28 +151,30 @@ export function Admin({
       </AdminContainer>
 
       <AdminContainer title="Create Poll" onSubmit={handleCreatePoll}>
-        <Input 
-          label="Poll question" 
-          type="text" 
-          id="pollQuestion" 
+        <Input
+          label="Question"
+          type="text"
+          id="question"
           placeholder="What is your favorite color?"
           value={question}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
           required
-          minLength={5}
-          maxLength={200}
         />
-        <Input 
-          label="Poll options (one per line)" 
-          type="textarea" 
-          id="pollOptions" 
-          placeholder="Red&#13;&#10;Blue&#13;&#10;Green"
+        <Input
+          label="Options (one per line)"
+          type="textarea"
+          id="options"
+          placeholder="Red&#10;Blue&#10;Green"
           value={optionsString}
-          rows={5}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setOptionsString(e.target.value)}
+          rows={4}
           required
         />
-        {errorState && <p className="text-red-500 text-sm">{errorState}</p>}
+        {createMessage && (
+          <p className={`text-sm ${createMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+            {createMessage.text}
+          </p>
+        )}
         <Button type="submit" disabled={isCreating}>
           {isCreating ? 'Creating...' : 'Create Poll'}
         </Button>

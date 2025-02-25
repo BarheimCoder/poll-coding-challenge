@@ -25,7 +25,12 @@ export const pollService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, options }),
     });
-    return response.json();
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to create poll');
+    }
+    const data = await response.json();
+    return data.message;
   },
 
   toggleActive: async (pollId: number) => {

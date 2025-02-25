@@ -92,6 +92,20 @@ app.post('/api/polls', async (req, res) => {
   try {
     const { question, options } = req.body;
 
+    // Validate input
+    if (!question.trim()) {
+      return res.status(400).json({ error: 'Question cannot be empty' });
+    }
+    if (options.length < 2) {
+      return res.status(400).json({ error: 'Poll must have at least 2 options' });
+    }
+
+    // Check for duplicate options
+    const uniqueOptions = new Set(options.map(opt => opt.trim()));
+    if (uniqueOptions.size !== options.length) {
+      return res.status(400).json({ error: 'Duplicate options are not allowed' });
+    }
+
     const client = await db.pool.connect();
     try {
       await client.query('BEGIN');

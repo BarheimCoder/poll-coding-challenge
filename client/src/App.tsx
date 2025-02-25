@@ -58,12 +58,14 @@ function App() {
   const handleCreatePoll = async (question: string, options: string[]) => {
     setIsCreating(true);
     try {
-      await pollService.createPoll({ question, options });
+      const message = await pollService.createPoll({ question, options });
       await loadActivePoll();
-      return true; // Return success status to Admin component
+      return message;
     } catch (err) {
-      setError('Failed to create poll');
-      return false;
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Failed to create poll');
     } finally {
       setIsCreating(false);
     }
