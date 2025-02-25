@@ -3,8 +3,14 @@ const API_URL = '/api';
 export const pollService = {
   getActivePoll: async () => {
     const response = await fetch(`${API_URL}/polls/active`);
+    const data = await response.json();
+
     if (!response.ok) throw new Error('Failed to fetch active poll');
-    return response.json();
+    if (data.message === 'No active poll found') {
+      return null;
+    }
+
+    return data;
   },
 
   vote: async (pollId: number, optionId: number) => {
