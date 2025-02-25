@@ -116,12 +116,15 @@ app.post('/api/polls', async (req, res) => {
       );
       const pollId = pollResult.rows[0].id;
 
-      const optionValues = options.map((option_text) =>
-        `(${pollId}, '${option_text}')`
+      const optionQueries = options.map((_, index) =>
+        `($1, $${index + 2})`
       ).join(', ');
 
+      const optionParams = [pollId, ...options];
+
       await client.query(
-        `INSERT INTO poll_options (poll_id, option_text) VALUES ${optionValues}`
+        `INSERT INTO poll_options (poll_id, option_text) VALUES ${optionQueries}`,
+        optionParams
       );
 
       await client.query('COMMIT');
@@ -143,6 +146,16 @@ app.post('/api/polls/:pollId/vote', async (req, res) => {
   try {
     const { pollId } = req.params;
     const { optionId } = req.body;
+
+    // Verify option belongs to poll
+    const optionCheck = await db.pool.query(
+      'SELECT id FROM poll_options WHERE id = $1 AND poll_id = $2',
+      [optionId, pollId]
+    );
+
+    if (optionCheck.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid option for this poll' });
+    }
 
     await db.pool.query(
       'INSERT INTO votes (poll_id, option_id) VALUES ($1, $2)',
