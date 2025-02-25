@@ -15,7 +15,7 @@ Frontend
 - Tailwind
 - Jest
 
-![image](https://github.com/user-attachments/assets/6455ca98-02de-4577-badd-7d66ec545d46)
+![image](https://github.com/user-attachments/assets/7924894e-a5a1-4b51-9b2f-8d3c65c7b0ce)
 
 ## Features
 
