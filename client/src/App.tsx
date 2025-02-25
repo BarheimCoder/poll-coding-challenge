@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { PollContainer } from './components/Organisms/PollContainer/PollContainer';
 import { pollService } from './services/api';
 import { Poll } from './types/poll';
@@ -17,6 +17,7 @@ function App() {
   const [isToggling, setIsToggling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoadingVotes, setIsLoadingVotes] = useState(false);
+  const [noPollExists, setNoPollExists] = useState(false);
 
   useEffect(() => {
     loadActivePoll();
@@ -26,7 +27,13 @@ function App() {
     setIsLoading(true);
     try {
       const activePoll = await pollService.getActivePoll();
-      setPoll(activePoll);
+      if (!activePoll) {
+        setNoPollExists(true);
+        setPoll(null);
+      } else {
+        setPoll(activePoll);
+        setNoPollExists(false);
+      }
     } catch (err) {
       setError('Failed to load poll');
     } finally {
@@ -47,7 +54,7 @@ function App() {
     try {
       await pollService.vote(poll.id, selectedOption);
       setShowResult(true);
-      await loadActivePoll();
+      setTimeout(() => loadActivePoll(), 0);
     } catch (err) {
       setError('Failed to submit vote');
     } finally {
@@ -58,14 +65,17 @@ function App() {
   const handleCreatePoll = async (question: string, options: string[]) => {
     setIsCreating(true);
     try {
-      const message = await pollService.createPoll({ question, options });
-      await loadActivePoll();
-      return message;
+      await pollService.createPoll({ question, options });
+      setTimeout(() => loadActivePoll(), 0);
+      return true;
     } catch (err) {
+      console.error('Create poll error:', err);
       if (err instanceof Error) {
-        throw err;
+        setError(err.message);
+      } else {
+        setError('Failed to create poll');
       }
-      throw new Error('Failed to create poll');
+      return false;
     } finally {
       setIsCreating(false);
     }
@@ -75,7 +85,7 @@ function App() {
     setIsToggling(true);
     try {
       const message = await pollService.toggleActive(pollId);
-      await loadActivePoll();
+      setTimeout(() => loadActivePoll(), 0);
       return message;
     } catch (err) {
       if (err instanceof Error) {
@@ -91,11 +101,11 @@ function App() {
     setIsDeleting(true);
     try {
       const message = await pollService.deletePoll(pollId);
-      await loadActivePoll();
+      setTimeout(() => loadActivePoll(), 0);
       return message;
     } catch (err) {
       if (err instanceof Error) {
-        throw err; // Pass the error through to Admin component
+        throw err;
       }
       throw new Error('Failed to delete poll');
     } finally {
@@ -119,14 +129,6 @@ function App() {
     }
   };
 
-  // if (error) return <div className="text-red-500">{error}</div>;
-  if (!poll) return (
-    <div className="flex justify-center items-center h-screen text-black">
-      <div className="flex justify-center items-center gap-4 bg-white/30 backdrop:blur-sm p-4 rounded-lg animate-pulse">
-      <Spinner />Loading...
-    </div>
-  </div>);
-
   return (
     <Router>
       <div className="min-h-screen">
@@ -137,35 +139,56 @@ function App() {
           </div>
         </nav>
 
-        <Routes>
-          <Route path="/admin" element={
-            <div className="flex justify-center items-center">
-              <Admin 
-                onCreatePoll={handleCreatePoll}
-                onToggleActive={handleToggleActive}
-                onDeletePoll={handleDeletePoll}
-                isCreating={isCreating}
-                isToggling={isToggling}
-                isDeleting={isDeleting}
-                isLoadingVotes={isLoadingVotes}
-                onViewVotes={handleViewVotes}
-                error={error}
-              />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-screen text-black">
+            <div className="flex justify-center items-center gap-4 bg-white/30 backdrop:blur-sm p-4 rounded-lg animate-pulse">
+              <Spinner />Loading...
             </div>
-          } />
-          <Route path="/" element={
-            <div className="flex justify-center items-center">
-              <PollContainer
-                poll={poll}
-                selectedOption={selectedOption}
-                showResult={showResult}
-                onOptionSelect={setSelectedOption}
-                onVote={handleVoteClick}
-                isVoting={isVoting}
-              />
-            </div>
-          } />
-        </Routes>
+          </div>
+        ) : (
+          <Routes>
+            <Route path="/admin" element={
+              <div className="flex justify-center items-center">
+                <Admin 
+                  onCreatePoll={handleCreatePoll}
+                  onToggleActive={handleToggleActive}
+                  onDeletePoll={handleDeletePoll}
+                  isCreating={isCreating}
+                  isToggling={isToggling}
+                  isDeleting={isDeleting}
+                  isLoadingVotes={isLoadingVotes}
+                  onViewVotes={handleViewVotes}
+                  error={error}
+                />
+              </div>
+            } />
+            <Route path="/" element={
+              noPollExists ? (
+                <Navigate to="/admin" replace />
+              ) : poll ? (
+                <div className="flex justify-center items-center">
+                  <PollContainer
+                    poll={poll}
+                    selectedOption={selectedOption}
+                    showResult={showResult}
+                    onOptionSelect={setSelectedOption}
+                    onVote={handleVoteClick}
+                    isVoting={isVoting}
+                  />
+                </div>
+              ) : (
+                <div className="flex justify-center items-center h-screen">
+                  <div className="bg-white/30 p-6 rounded-lg text-center">
+                    <p className="text-lg mb-4">No active poll found</p>
+                    <Link to="/admin" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                      Go to Admin
+                    </Link>
+                  </div>
+                </div>
+              )
+            } />
+          </Routes>
+        )}
       </div>
     </Router>
   );

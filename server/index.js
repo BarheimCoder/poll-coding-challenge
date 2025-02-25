@@ -3,15 +3,25 @@ const cors = require('cors');
 const app = express();
 const db = require('./db');
 
+app.use(express.json());
+
 /* 
  * Middleware
  */
+// Update CORS configuration
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production'
+    ? ['http://localhost', 'http://frontend']
+    : 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
-app.use(express.json());
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 /* 
  * Routes
@@ -92,11 +102,14 @@ app.post('/api/polls', async (req, res) => {
   try {
     const { question, options } = req.body;
 
+    // Debug logging
+    console.log('Received request:', { question, options });
+
     // Validate input
-    if (!question.trim()) {
+    if (!question?.trim()) {
       return res.status(400).json({ error: 'Question cannot be empty' });
     }
-    if (options.length < 2) {
+    if (!options?.length || options.length < 2) {
       return res.status(400).json({ error: 'Poll must have at least 2 options' });
     }
 
@@ -108,6 +121,9 @@ app.post('/api/polls', async (req, res) => {
 
     const client = await db.pool.connect();
     try {
+      // Debug logging
+      console.log('Connected to database');
+
       await client.query('BEGIN');
 
       const pollResult = await client.query(
@@ -130,6 +146,7 @@ app.post('/api/polls', async (req, res) => {
       await client.query('COMMIT');
       res.status(201).json({ message: 'Poll created successfully', pollId });
     } catch (err) {
+      console.error('Database error:', err);
       await client.query('ROLLBACK');
       throw err;
     } finally {
@@ -137,7 +154,7 @@ app.post('/api/polls', async (req, res) => {
     }
   } catch (err) {
     console.error('Error creating poll:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });
 

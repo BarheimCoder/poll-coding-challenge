@@ -30,7 +30,6 @@ export function Admin({
   isToggling,
   isDeleting,
   isLoadingVotes,
-  error 
 }: AdminProps) {
   const [question, setQuestion] = useState('');
   const [optionsString, setOptionsString] = useState('');
@@ -39,7 +38,6 @@ export function Admin({
   const [viewVotesId, setViewVotesId] = useState('');
   const [votes, setVotes] = useState<Vote[]>([]);
   const [showVotes, setShowVotes] = useState(false);
-  const [errorState, setError] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [deleteMessage, setDeleteMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const [toggleMessage, setToggleMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
