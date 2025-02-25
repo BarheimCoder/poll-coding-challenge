@@ -19,4 +19,8 @@ pool.query('SELECT NOW()', (err) => {
   }
 });
 
-module.exports = { pool };
+const closePool = () => {
+  return pool ? pool.end() : Promise.resolve();
+}
+
+module.exports = { pool, closePool };
