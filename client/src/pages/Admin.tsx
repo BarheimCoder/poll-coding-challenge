@@ -3,11 +3,14 @@ import { Input } from '../components/Atoms/Input/Input';
 import { useState } from 'react';
 import { pollService } from '../services/api';
 import AdminContainer from '../components/Organisms/PollContainer/AdminContainer';
-export const Admin = () => {
+
+export function Admin() {
   const [question, setQuestion] = useState('');
   const [optionsString, setOptionsString] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [togglePollId, setTogglePollId] = useState('');
+  const [isToggling, setIsToggling] = useState(false);
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,16 +35,33 @@ export const Admin = () => {
     }
   };
 
+  const handleToggleActive = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!togglePollId) return;
+
+    setIsToggling(true);
+    try {
+      await pollService.toggleActive(Number(togglePollId));
+      setTogglePollId('');
+      setError(null);
+    } catch (err) {
+      setError('Failed to toggle poll status');
+    } finally {
+      setIsToggling(false);
+    }
+  };
+      
+
   return (
     <div className="container text-center flex gap-4 justify-between flex-wrap y-8 p-4 rounded-lg bg-white/20">
       <h1 className="text-4xl mb-12 w-full">Admin Panel</h1>
 
-      <AdminContainer title="Delete Poll">
+      <AdminContainer title="Delete Poll" onSubmit={handleDeletePoll}>
         <Input label="Poll ID to delete" type="number" id="pollId" placeholder="Poll ID" />
         <Button type="submit">Delete Poll</Button>
       </AdminContainer>
 
-      <AdminContainer title="Create Poll">
+      <AdminContainer title="Create Poll" onSubmit={handleCreatePoll}>
         <Input 
             label="Poll question" 
             type="text" 
@@ -66,16 +86,26 @@ export const Admin = () => {
           </Button>
       </AdminContainer>
 
-      <AdminContainer title="View Poll Results">
+      <AdminContainer title="View Poll Results" onSubmit={handleViewPollResults}>
         <Input label="Poll ID to view results of" type="number" id="pollId" placeholder="Poll ID" />
           <Input label="Poll ID to view results of" type="number" id="pollId" placeholder="Poll ID" />
         <Button>View Poll Results</Button>
       </AdminContainer>
 
-      <AdminContainer title="Set active poll">
-        <Input label="Poll ID to set as active" type="number" id="pollId" placeholder="Poll ID" />
-        <Button>Set Active Poll</Button>
+      <AdminContainer title="Toggle active poll" onSubmit={handleToggleActive}>
+        <Input 
+          label="Poll ID to toggle active status of" 
+          type="number" 
+          id="pollId" 
+          placeholder="Poll ID"
+          value={togglePollId}
+          onChange={(e) => setTogglePollId(e.target.value)}
+          required
+        />
+        <Button type="submit" disabled={isToggling}>
+          {isToggling ? 'Toggling...' : 'Toggle Active Poll'}
+        </Button>
       </AdminContainer>
     </div>
   );
-}; 
+} 

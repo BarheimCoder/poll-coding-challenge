@@ -62,6 +62,7 @@ app.post('/api/polls/toggle-active', async (req, res) => {
     const { pollId } = req.body;
 
     await db.pool.query('UPDATE polls SET active = NOT active WHERE id = $1', [pollId]);
+    res.json({ message: 'Poll status toggled successfully' });
   } catch (err) {
     console.error('Error toggling active poll:', err);
     res.status(500).json({ error: 'Internal server error' });
