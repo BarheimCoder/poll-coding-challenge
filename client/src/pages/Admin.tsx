@@ -1,6 +1,5 @@
 import Button from '../components/Atoms/Button/Button';
 import { Input } from '../components/Atoms/Input/Input';
-import { TextArea } from '../components/Atoms/TextArea/TextArea';
 import { useState } from 'react';
 import AdminContainer from '../components/Organisms/PollContainer/AdminContainer';
 
@@ -59,8 +58,8 @@ export function Admin({
     }
 
     try {
-      const message = await onCreatePoll(question, options);
-      setCreateMessage({ text: message, type: 'success' });
+      await onCreatePoll(question, options);
+      setCreateMessage({ text: 'Poll created successfully', type: 'success' });
       setQuestion('');
       setOptionsString('');
     } catch (err) {
@@ -77,8 +76,8 @@ export function Admin({
     if (!togglePollId) return;
 
     try {
-      const message = await onToggleActive(Number(togglePollId));
-      setToggleMessage({ text: message, type: 'success' });
+      await onToggleActive(Number(togglePollId));
+      setToggleMessage({ text: 'Poll status updated successfully', type: 'success' });
       setTogglePollId('');
     } catch (err) {
       if (err instanceof Error) {
@@ -94,8 +93,8 @@ export function Admin({
     if (!deletePollId) return;
 
     try {
-      const message = await onDeletePoll(Number(deletePollId));
-      setDeleteMessage({ text: message, type: 'success' });
+      await onDeletePoll(Number(deletePollId));
+      setDeleteMessage({ text: 'Poll deleted successfully', type: 'success' });
       setDeletePollId('');
     } catch (err) {
       if (err instanceof Error) {
