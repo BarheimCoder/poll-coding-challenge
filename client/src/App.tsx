@@ -11,7 +11,7 @@ function App() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [/*isLoading */, setIsLoading] = useState<boolean>(true);
   const [isVoting, setIsVoting] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isToggling, setIsToggling] = useState(false);

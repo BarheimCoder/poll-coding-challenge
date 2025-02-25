@@ -61,6 +61,26 @@ npm install
 npm run dev
 ```
 
-## TODO
+## Docker Setup
 
-- Move to Docker
+1. Install Docker and Docker Compose on your machine
+
+2. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/polling-app.git
+   cd polling-app
+   ```
+
+3. Start the application
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Access the application
+   - Frontend: http://localhost
+   - Backend API: http://localhost/api
+
+5. Stop the application
+   ```bash
+   docker-compose down
+   ```
