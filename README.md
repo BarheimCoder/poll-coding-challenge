@@ -40,48 +40,14 @@ This is handled via API calls to the backend.
 - 100/100 score for accessibility, SEO and best practices in Lighthouse
 - Fully acessible with keyboard, respecting tabbing order and high contrast focus
 
-## Local development setup
-
-Locally, the backend is running on port 5000 and the frontend is running on port 5173.
-
-### Backend
-
-1. Install dependencies
-
-```bash
-cd server
-npm install
-```
-
-2. Start the server
-
-```bash
-nodemon index.js
-```
-
-### Frontend
-
-1. Install dependencies
-
-```bash
-cd client
-npm install
-```
-
-2. Start the frontend
-
-```bash
-npm run dev
-```
-
-## Docker Setup
+## Local setup
 
 1. Install Docker and Docker Compose on your machine
 
 2. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/polling-app.git
-   cd polling-app
+   git clone https://github.com/BarheimCoder/poll-coding-challenge
+   cd poll-coding-challenge
    ```
 
 3. Start the application
@@ -89,9 +55,9 @@ npm run dev
    docker-compose up -d
    ```
 
-4. Access the application
-   - Frontend: http://localhost
-   - Backend API: http://localhost/api
+4. Access the application (default ports)
+   - Frontend: http://localhost:8082
+   - Backend API: http://localhost:5000/api
 
 5. Stop the application
    ```bash
@@ -105,4 +71,3 @@ npm run dev
 - Add more API calls
 - - View all polls in a list
   - View vote results in the admin
-- 
