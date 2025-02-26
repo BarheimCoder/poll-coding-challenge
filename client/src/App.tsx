@@ -180,7 +180,7 @@ function App() {
                 <div className="flex justify-center items-center h-screen">
                   <div className="bg-white/30 p-6 rounded-lg text-center">
                     <p className="text-lg mb-4">No active poll found</p>
-                    <Link to="/admin" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    <Link to="/admin" className="bg-black text-white px-4 py-2 rounded hover:bg-blue-600">
                       Go to Admin
                     </Link>
                   </div>
