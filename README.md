@@ -33,9 +33,11 @@ This is handled via API calls to the backend.
 - Toggle a different poll as active (toggling all others inactive)
 
 ### App
+![image](https://github.com/user-attachments/assets/f1ae58ca-52a3-4627-82a8-f43e176505f1)
+
 
 - Fully responsive
-- 100/100 score for accessibility, SEO and best practices
+- 100/100 score for accessibility, SEO and best practices in Lighthouse
 - Fully acessible with keyboard, respecting tabbing order and high contrast focus
 
 ## Local development setup
